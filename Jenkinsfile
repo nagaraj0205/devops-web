@@ -1,20 +1,32 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "devops-web"
+        CONTAINER_NAME = "devops-web-container"
+    }
+
     stages {
 
-        stage('Checkout') {
+        stage('Build Docker Image') {
             steps {
-                git branch: 'main',
-                url: 'https://github.com/nagaraj0205/devops-web.git'
+                sh '''
+                docker build -t $IMAGE_NAME .
+                '''
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy Container') {
             steps {
-                sh 'cp -r * /var/www/html/'
+                sh '''
+                docker rm -f $CONTAINER_NAME || true
+
+                docker run -d \
+                  --name $CONTAINER_NAME \
+                  -p 81:80 \
+                  $IMAGE_NAME
+                '''
             }
         }
-
     }
 }
